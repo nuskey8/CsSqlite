@@ -44,6 +44,12 @@ public readonly unsafe ref struct SpliteParameters
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Add(int index, double value)
+    {
+        BindParameter(index, value);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Add(int index, ReadOnlySpan<char> text)
     {
         using var utf8Text = new PooledUtf8String(text);
