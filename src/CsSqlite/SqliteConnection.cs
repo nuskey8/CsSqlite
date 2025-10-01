@@ -115,22 +115,27 @@ public unsafe sealed class SqliteConnection(string path) : IDisposable
     public int ExecuteNonQuery(ref ExecuteInterporatedStringHandler commandHandler)
     {
         using var command = CreateCommand(commandHandler.CommandText);
-        for (int i = 0; i < commandHandler.Parameter.Length; i++)
+        var handlerParameters = commandHandler.Parameters;
+        var commandParameters = command.Parameters;
+        for (int i = 0; i < handlerParameters.Length; i++)
         {
-            var p = commandHandler.Parameter[i];
+            var p = handlerParameters[i];
             switch (p.Kind)
             {
-                case SqlitePramKind.String:
-                    command.Parameters.Add(i + 1, p.Payload.String.Span);
-                    break;
-                case SqlitePramKind.Utf8String:
-                    command.Parameters.Add(i + 1, p.Payload.Utf8String.Span);
-                    break;
                 case SqlitePramKind.Integer:
-                    command.Parameters.Add(i + 1, p.Payload.Long);
+                    commandParameters.Add(i + 1, p.Payload.Long);
                     break;
                 case SqlitePramKind.Double:
-                    command.Parameters.Add(i + 1, p.Payload.Double);
+                    commandParameters.Add(i + 1, p.Payload.Double);
+                    break;
+                case SqlitePramKind.String:
+                    commandParameters.Add(i + 1, p.Payload.String.Span);
+                    break;
+                case SqlitePramKind.Utf8String:
+                    commandParameters.Add(i + 1, p.Payload.BlobOrUtf8String.Span);
+                    break;
+                case SqlitePramKind.Blob:
+                    commandParameters.AddBytes(i + 1, p.Payload.BlobOrUtf8String.Span);
                     break;
             }
         }
@@ -161,23 +166,28 @@ public unsafe sealed class SqliteConnection(string path) : IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public SqliteReader ExecuteReader(ref ExecuteInterporatedStringHandler commandHandler)
     {
-        var command = CreateCommand(commandHandler.CommandText);
-        for (int i = 0; i < commandHandler.Parameter.Length; i++)
+        using var command = CreateCommand(commandHandler.CommandText);
+        var handlerParameters = commandHandler.Parameters;
+        var commandParameters = command.Parameters;
+        for (int i = 0; i < handlerParameters.Length; i++)
         {
-            var p = commandHandler.Parameter[i];
+            var p = handlerParameters[i];
             switch (p.Kind)
             {
                 case SqlitePramKind.String:
-                    command.Parameters.Add(i + 1, p.Payload.String.Span);
+                    commandParameters.Add(i + 1, p.Payload.String.Span);
                     break;
                 case SqlitePramKind.Utf8String:
-                    command.Parameters.Add(i + 1, p.Payload.Utf8String.Span);
+                    commandParameters.Add(i + 1, p.Payload.BlobOrUtf8String.Span);
                     break;
                 case SqlitePramKind.Integer:
-                    command.Parameters.Add(i + 1, p.Payload.Long);
+                    commandParameters.Add(i + 1, p.Payload.Long);
                     break;
                 case SqlitePramKind.Double:
-                    command.Parameters.Add(i + 1, p.Payload.Double);
+                    commandParameters.Add(i + 1, p.Payload.Double);
+                    break;
+                case SqlitePramKind.Blob:
+                    commandParameters.AddBytes(i + 1, p.Payload.BlobOrUtf8String.Span);
                     break;
             }
         }

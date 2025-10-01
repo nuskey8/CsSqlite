@@ -82,6 +82,11 @@ public readonly unsafe ref struct SpliteParameters
         BindText(index, utf8Text, true);
     }
 
+    public void AddBytes(int index, ReadOnlySpan<byte> blob)
+    {
+        BindBlob(index, blob);
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Add(ReadOnlySpan<char> name, int value)
     {
