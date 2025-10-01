@@ -23,7 +23,8 @@ public unsafe sealed class SqliteConnection(string path) : IDisposable
     public void Open()
     {
         ThrowIfDisposed();
-        if (state == State.Open) return;
+        if (state == State.Open)
+            return;
 
         var buffer = ArrayPool<byte>.Shared.Rent(path.Length * 3);
         try
@@ -111,6 +112,41 @@ public unsafe sealed class SqliteConnection(string path) : IDisposable
         return command.ExecuteNonQuery();
     }
 
+    public int ExecuteNonQuery(ref ExecuteInterporatedStringHandler commandHandler)
+    {
+        using var command = CreateCommand(commandHandler.CommandText);
+        var handlerParameters = commandHandler.Parameters;
+        var commandParameters = command.Parameters;
+        for (int i = 0; i < handlerParameters.Length; i++)
+        {
+            var p = handlerParameters[i];
+            switch (p.Kind)
+            {
+                case SqlitePramKind.Integer:
+                    commandParameters.Add(i + 1, p.Payload.Long);
+                    break;
+                case SqlitePramKind.Double:
+                    commandParameters.Add(i + 1, p.Payload.Double);
+                    break;
+                case SqlitePramKind.String:
+                    commandParameters.Add(i + 1, p.Payload.String.Span);
+                    break;
+                case SqlitePramKind.Utf8String:
+                    commandParameters.Add(i + 1, p.Payload.BlobOrUtf8String.Span);
+                    break;
+                case SqlitePramKind.Blob:
+                    commandParameters.AddBytes(i + 1, p.Payload.BlobOrUtf8String.Span);
+                    break;
+            }
+        }
+        return command.ExecuteNonQuery();
+    }
+
+    public int ExecuteNonQuery(Span<char> commandText, [InterpolatedStringHandlerArgument("commandText")] ref ExecuteInterporatedStringHandler commandHandler)
+    {
+        return ExecuteNonQuery(ref commandHandler);
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public SqliteReader ExecuteReader(ReadOnlySpan<byte> utf8CommandText)
     {
@@ -125,6 +161,43 @@ public unsafe sealed class SqliteConnection(string path) : IDisposable
         ThrowIfDisposed();
         Open();
         return new(this, Prepare(commandText), true);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public SqliteReader ExecuteReader(ref ExecuteInterporatedStringHandler commandHandler)
+    {
+        using var command = CreateCommand(commandHandler.CommandText);
+        var handlerParameters = commandHandler.Parameters;
+        var commandParameters = command.Parameters;
+        for (int i = 0; i < handlerParameters.Length; i++)
+        {
+            var p = handlerParameters[i];
+            switch (p.Kind)
+            {
+                case SqlitePramKind.String:
+                    commandParameters.Add(i + 1, p.Payload.String.Span);
+                    break;
+                case SqlitePramKind.Utf8String:
+                    commandParameters.Add(i + 1, p.Payload.BlobOrUtf8String.Span);
+                    break;
+                case SqlitePramKind.Integer:
+                    commandParameters.Add(i + 1, p.Payload.Long);
+                    break;
+                case SqlitePramKind.Double:
+                    commandParameters.Add(i + 1, p.Payload.Double);
+                    break;
+                case SqlitePramKind.Blob:
+                    commandParameters.AddBytes(i + 1, p.Payload.BlobOrUtf8String.Span);
+                    break;
+            }
+        }
+        return command.ExecuteReader();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public SqliteReader ExecuteReader(Span<char> commandText, [InterpolatedStringHandlerArgument("commandText")] ref ExecuteInterporatedStringHandler commandHandler)
+    {
+        return ExecuteReader(ref commandHandler);
     }
 
     internal void ThrowIfDisposed()
