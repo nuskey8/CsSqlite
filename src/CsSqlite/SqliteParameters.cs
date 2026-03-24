@@ -3,12 +3,12 @@ using static CsSqlite.NativeMethods;
 
 namespace CsSqlite;
 
-public readonly unsafe ref struct SpliteParameters
+public readonly unsafe ref struct SqliteParameters
 {
     readonly SqliteConnection connection;
     readonly sqlite3_stmt* stmt;
 
-    internal SpliteParameters(SqliteConnection connection, sqlite3_stmt* stmt)
+    internal SqliteParameters(SqliteConnection connection, sqlite3_stmt* stmt)
     {
         this.connection = connection;
         this.stmt = stmt;

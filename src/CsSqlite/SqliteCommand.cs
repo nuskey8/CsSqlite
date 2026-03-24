@@ -5,7 +5,7 @@ namespace CsSqlite;
 
 public readonly unsafe struct SqliteCommand(SqliteConnection connection, sqlite3_stmt* stmt) : IDisposable
 {
-    public SpliteParameters Parameters => new(connection, stmt);
+    public SqliteParameters Parameters => new(connection, stmt);
 
     public int ExecuteNonQuery()
     {
