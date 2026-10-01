@@ -17,6 +17,8 @@ public sealed unsafe class SqliteConnection(string path) : IDisposable
     State state;
     internal sqlite3* db;
 
+    internal string DatabasePath => path;
+
     public bool IsDisposed => state == State.Disposed;
 
     public void Open()
