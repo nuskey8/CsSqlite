@@ -220,12 +220,7 @@ public unsafe struct SqliteReader : IDisposable
     /// <summary>
     /// Returns metadata for the columns in the current result set.
     /// </summary>
-    /// <remarks>
-    /// For columns that originate from a table, the returned table includes the
-    /// database, table, and column names along with the column constraints known
-    /// to SQLite. Expressions do not have base-column metadata.
-    /// </remarks>
-    public DataTable GetSchemaTable()
+    public readonly DataTable GetSchemaTable()
     {
         connection.ThrowIfDisposed();
 
