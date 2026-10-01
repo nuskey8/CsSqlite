@@ -16,7 +16,7 @@ public readonly unsafe struct SqliteCommand : IDisposable
     }
 
     public SqliteParameters Parameters =>
-        new(connection, statements.Count == 0 ? null : (sqlite3_stmt*)statements.Buffer[0]);
+        new(connection, statements);
 
     public int ExecuteNonQuery()
     {
